@@ -1,13 +1,18 @@
 import React, { useEffect, useState } from 'react';
+import { ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import theme from './theme';
 import {
   AppBar, Toolbar, Typography, Container, Grid, Card, CardContent,
   CardActions, Button, TextField, Select, MenuItem, InputLabel,
   FormControl, Box, IconButton, Dialog, DialogTitle, DialogContent,
-  DialogActions, CircularProgress
+  DialogActions, CircularProgress, Chip, Stack
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
+import AddIcon from '@mui/icons-material/Add';
+import SearchIcon from '@mui/icons-material/Search';
 
 function App() {
   const [leagues, setLeagues] = useState([]);
@@ -17,6 +22,8 @@ function App() {
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState(null);
   const [loadingStats, setLoadingStats] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+
   const [formData, setFormData] = useState({
     name: '',
     league: 'NBA',
@@ -122,7 +129,6 @@ function App() {
   const handleSubmit = () => {
     const payload = { ...formData };
 
-    // Convert numerical strings to numbers or null
     ['points', 'rebounds', 'assists', 'goals', 'touchdowns', 'yards', 'home_runs'].forEach(field => {
        payload[field] = payload[field] === '' ? null : parseInt(payload[field]);
     });
@@ -191,74 +197,194 @@ function App() {
     }
   };
 
+  const filteredPlayers = players.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
   return (
-    <div className="App">
-      <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Sports Stats Tracker
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <div className="App">
+        {/* Header / Search Area */}
+        <Box sx={{
+          background: 'linear-gradient(180deg, rgba(21,21,26,0) 0%, rgba(21,21,26,1) 100%), url(https://www.transparenttextures.com/patterns/cubes.png), #15151a',
+          padding: { xs: 4, md: 8 },
+          textAlign: 'center',
+          borderBottom: '1px solid #333'
+        }}>
+          <Typography variant="h1" sx={{ color: 'primary.main', mb: 2, fontSize: { xs: '2.5rem', md: '4rem' } }}>
+            STAT TRACKER
           </Typography>
-          <Button color="inherit" onClick={() => handleOpen()}>Add Player</Button>
-        </Toolbar>
-      </AppBar>
+          <Typography variant="h6" sx={{ color: 'text.secondary', mb: 4 }}>
+            Access player stats instantly.
+          </Typography>
 
-      <Container sx={{ marginTop: 4 }}>
-        <Grid container spacing={4}>
-          {players.map((player) => (
-            <Grid item key={player.id} xs={12} sm={6} md={4}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h5" component="div">{player.name}</Typography>
-                  <Typography sx={{ mb: 1.5 }} color="text.secondary">
-                    {player.league} - {player.team} ({player.position})
-                  </Typography>
-                  <Typography variant="body2">
-                    {player.league === 'NBA' && `Pts: ${player.points || 0}, Reb: ${player.rebounds || 0}, Ast: ${player.assists || 0}`}
-                    {player.league === 'NHL' && `Goals: ${player.goals || 0}, Ast: ${player.assists || 0}`}
-                    {player.league === 'NFL' && `TDs: ${player.touchdowns || 0}, Yds: ${player.yards || 0}`}
-                    {player.league === 'MLB' && `AVG: ${player.batting_average || 0}, HR: ${player.home_runs || 0}`}
-                  </Typography>
-                </CardContent>
-                <CardActions>
-                  <IconButton onClick={() => handleOpen(player)}><EditIcon /></IconButton>
-                  <IconButton onClick={() => handleDelete(player.id)}><DeleteIcon /></IconButton>
-                </CardActions>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      </Container>
-
-      <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>{editId ? 'Edit Player' : 'Add Player'}</DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <TextField autoFocus margin="dense" name="name" label="Name" fullWidth value={formData.name} onChange={handleInputChange} />
-            <Button
+          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, maxWidth: 600, mx: 'auto' }}>
+            <TextField
+                placeholder="Search players..."
                 variant="outlined"
-                startIcon={loadingStats ? <CircularProgress size={20} /> : <AutoFixHighIcon />}
-                onClick={handleFetchStats}
-                disabled={loadingStats}
+                fullWidth
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                InputProps={{
+                    startAdornment: <SearchIcon sx={{ color: 'text.secondary', mr: 1 }} />,
+                    sx: { backgroundColor: 'background.paper' }
+                }}
+            />
+            <Button
+                variant="contained"
+                color="primary"
+                startIcon={<AddIcon />}
+                onClick={() => handleOpen()}
+                sx={{ minWidth: 140 }}
             >
-                Auto-Fill
+                New Player
             </Button>
           </Box>
-          <FormControl fullWidth margin="dense">
-            <InputLabel>League</InputLabel>
-            <Select name="league" value={formData.league} label="League" onChange={handleInputChange}>
-              {leagues.map(l => <MenuItem key={l} value={l}>{l}</MenuItem>)}
-            </Select>
-          </FormControl>
-          <TextField margin="dense" name="team" label="Team" fullWidth value={formData.team} onChange={handleInputChange} />
-          <TextField margin="dense" name="position" label="Position" fullWidth value={formData.position} onChange={handleInputChange} />
-          {renderStatInputs()}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Cancel</Button>
-          <Button onClick={handleSubmit} variant="contained">Save</Button>
-        </DialogActions>
-      </Dialog>
-    </div>
+        </Box>
+
+        {/* Content Area */}
+        <Container sx={{ marginTop: 6, paddingBottom: 8 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+                <Typography variant="h5" sx={{ borderLeft: '4px solid #F5D547', pl: 2 }}>
+                    Trending Players
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                    {filteredPlayers.length} results
+                </Typography>
+            </Box>
+
+          <Grid container spacing={3}>
+            {filteredPlayers.map((player) => (
+              <Grid item key={player.id} xs={12} sm={6} md={4} lg={3}>
+                <Card sx={{
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    transition: 'transform 0.2s',
+                    '&:hover': {
+                        transform: 'translateY(-4px)',
+                        boxShadow: '0 8px 30px rgba(0,0,0,0.8)'
+                    }
+                }}>
+                  <CardContent>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
+                        <Chip label={player.league} size="small" color="secondary" variant="filled" sx={{ fontWeight: 'bold' }} />
+                        <Typography variant="caption" color="text.secondary">{player.team}</Typography>
+                    </Box>
+                    <Typography variant="h5" component="div" sx={{ mb: 0.5, fontWeight: 900 }}>
+                        {player.name}
+                    </Typography>
+                    <Typography color="text.secondary" sx={{ mb: 2, fontStyle: 'italic' }}>
+                      {player.position}
+                    </Typography>
+
+                    {/* Stats Grid */}
+                    <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+                        {player.league === 'NBA' && (
+                            <>
+                                <Box>
+                                    <Typography variant="h6" color="primary">{player.points || 0}</Typography>
+                                    <Typography variant="caption" color="text.secondary">PTS</Typography>
+                                </Box>
+                                <Box>
+                                    <Typography variant="h6">{player.rebounds || 0}</Typography>
+                                    <Typography variant="caption" color="text.secondary">REB</Typography>
+                                </Box>
+                                <Box>
+                                    <Typography variant="h6">{player.assists || 0}</Typography>
+                                    <Typography variant="caption" color="text.secondary">AST</Typography>
+                                </Box>
+                            </>
+                        )}
+                        {player.league === 'NHL' && (
+                             <>
+                                <Box>
+                                    <Typography variant="h6" color="primary">{player.goals || 0}</Typography>
+                                    <Typography variant="caption" color="text.secondary">G</Typography>
+                                </Box>
+                                <Box>
+                                    <Typography variant="h6">{player.assists || 0}</Typography>
+                                    <Typography variant="caption" color="text.secondary">A</Typography>
+                                </Box>
+                            </>
+                        )}
+                        {player.league === 'NFL' && (
+                             <>
+                                <Box>
+                                    <Typography variant="h6" color="primary">{player.touchdowns || 0}</Typography>
+                                    <Typography variant="caption" color="text.secondary">TD</Typography>
+                                </Box>
+                                <Box>
+                                    <Typography variant="h6">{player.yards || 0}</Typography>
+                                    <Typography variant="caption" color="text.secondary">YDS</Typography>
+                                </Box>
+                            </>
+                        )}
+                        {player.league === 'MLB' && (
+                             <>
+                                <Box>
+                                    <Typography variant="h6" color="primary">{player.batting_average || 0}</Typography>
+                                    <Typography variant="caption" color="text.secondary">AVG</Typography>
+                                </Box>
+                                <Box>
+                                    <Typography variant="h6">{player.home_runs || 0}</Typography>
+                                    <Typography variant="caption" color="text.secondary">HR</Typography>
+                                </Box>
+                            </>
+                        )}
+                    </Box>
+                  </CardContent>
+                  <CardActions sx={{ justifyContent: 'flex-end', opacity: 0.6 }}>
+                    <IconButton size="small" onClick={() => handleOpen(player)}><EditIcon fontSize="small" /></IconButton>
+                    <IconButton size="small" onClick={() => handleDelete(player.id)}><DeleteIcon fontSize="small" /></IconButton>
+                  </CardActions>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        </Container>
+
+        <Dialog open={open} onClose={handleClose} PaperProps={{ sx: { borderRadius: 4 } }}>
+          <DialogTitle sx={{ fontWeight: 900, borderBottom: '1px solid #333' }}>
+            {editId ? 'EDIT PLAYER' : 'ADD PLAYER'}
+          </DialogTitle>
+          <DialogContent sx={{ mt: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+              <TextField autoFocus margin="dense" name="name" label="Name" fullWidth value={formData.name} onChange={handleInputChange} />
+              <Button
+                  variant="outlined"
+                  color="secondary"
+                  sx={{ height: 56, borderRadius: 3 }}
+                  onClick={handleFetchStats}
+                  disabled={loadingStats}
+              >
+                  {loadingStats ? <CircularProgress size={24} /> : <AutoFixHighIcon />}
+              </Button>
+            </Box>
+            <FormControl fullWidth margin="dense">
+              <InputLabel>League</InputLabel>
+              <Select name="league" value={formData.league} label="League" onChange={handleInputChange}>
+                {leagues.map(l => <MenuItem key={l} value={l}>{l}</MenuItem>)}
+              </Select>
+            </FormControl>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+                <TextField margin="dense" name="team" label="Team" fullWidth value={formData.team} onChange={handleInputChange} />
+                <TextField margin="dense" name="position" label="Position" fullWidth value={formData.position} onChange={handleInputChange} />
+            </Box>
+            <Typography variant="subtitle2" sx={{ mt: 2, mb: 1, color: 'primary.main', fontWeight: 'bold' }}>
+                STATISTICS
+            </Typography>
+            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                {renderStatInputs()}
+            </Box>
+          </DialogContent>
+          <DialogActions sx={{ p: 3 }}>
+            <Button onClick={handleClose} color="inherit">Cancel</Button>
+            <Button onClick={handleSubmit} variant="contained" disableElevation>Save Player</Button>
+          </DialogActions>
+        </Dialog>
+      </div>
+    </ThemeProvider>
   );
 }
 
