@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List
@@ -8,6 +8,8 @@ import schemas
 from database import SessionLocal, engine
 
 # Create the database tables
+# Note: In a real app, use Alembic for migrations.
+# Here we might need to delete the DB file for schema changes to take effect if not using migration tools.
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
@@ -48,7 +50,15 @@ def create_player(player: schemas.PlayerCreate, db: Session = Depends(get_db)):
         name=player.name,
         league=player.league,
         team=player.team,
-        position=player.position
+        position=player.position,
+        points=player.points,
+        rebounds=player.rebounds,
+        assists=player.assists,
+        goals=player.goals,
+        touchdowns=player.touchdowns,
+        yards=player.yards,
+        batting_average=player.batting_average,
+        home_runs=player.home_runs
     )
     db.add(db_player)
     db.commit()
@@ -61,3 +71,28 @@ def read_players(league: str = None, skip: int = 0, limit: int = 100, db: Sessio
     if league:
         query = query.filter(models.Player.league == league)
     return query.offset(skip).limit(limit).all()
+
+@app.put("/players/{player_id}", response_model=schemas.Player)
+def update_player(player_id: int, player_update: schemas.PlayerUpdate, db: Session = Depends(get_db)):
+    db_player = db.query(models.Player).filter(models.Player.id == player_id).first()
+    if db_player is None:
+        raise HTTPException(status_code=404, detail="Player not found")
+
+    # Update fields
+    for var, value in vars(player_update).items():
+        if value is not None:
+             setattr(db_player, var, value)
+
+    db.commit()
+    db.refresh(db_player)
+    return db_player
+
+@app.delete("/players/{player_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_player(player_id: int, db: Session = Depends(get_db)):
+    db_player = db.query(models.Player).filter(models.Player.id == player_id).first()
+    if db_player is None:
+        raise HTTPException(status_code=404, detail="Player not found")
+
+    db.delete(db_player)
+    db.commit()
+    return None
