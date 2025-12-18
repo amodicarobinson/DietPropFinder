@@ -1,15 +1,14 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 
 import models
 import schemas
+import scraper
 from database import SessionLocal, engine
 
 # Create the database tables
-# Note: In a real app, use Alembic for migrations.
-# Here we might need to delete the DB file for schema changes to take effect if not using migration tools.
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
@@ -96,3 +95,10 @@ def delete_player(player_id: int, db: Session = Depends(get_db)):
     db.delete(db_player)
     db.commit()
     return None
+
+@app.get("/scrape-stats")
+def scrape_stats(name: str, league: str):
+    stats = scraper.scrape_player_stats(league, name)
+    if not stats:
+        raise HTTPException(status_code=404, detail="Stats not found for player")
+    return stats

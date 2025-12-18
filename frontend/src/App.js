@@ -3,10 +3,11 @@ import {
   AppBar, Toolbar, Typography, Container, Grid, Card, CardContent,
   CardActions, Button, TextField, Select, MenuItem, InputLabel,
   FormControl, Box, IconButton, Dialog, DialogTitle, DialogContent,
-  DialogActions
+  DialogActions, CircularProgress
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 
 function App() {
   const [leagues, setLeagues] = useState([]);
@@ -15,6 +16,7 @@ function App() {
   // Form State
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState(null);
+  const [loadingStats, setLoadingStats] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     league: 'NBA',
@@ -90,6 +92,31 @@ function App() {
 
   const handleClose = () => {
     setOpen(false);
+  };
+
+  const handleFetchStats = () => {
+    if (!formData.name || !formData.league) {
+        alert("Please enter a name and select a league first.");
+        return;
+    }
+
+    setLoadingStats(true);
+    fetch(`http://localhost:8000/scrape-stats?name=${encodeURIComponent(formData.name)}&league=${formData.league}`)
+      .then(response => {
+        if (!response.ok) throw new Error("Stats not found");
+        return response.json();
+      })
+      .then(data => {
+        setFormData(prev => ({
+            ...prev,
+            ...data
+        }));
+      })
+      .catch(error => {
+          console.error(error);
+          alert("Could not fetch stats. Please check the name or try manually.");
+      })
+      .finally(() => setLoadingStats(false));
   };
 
   const handleSubmit = () => {
@@ -205,7 +232,17 @@ function App() {
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>{editId ? 'Edit Player' : 'Add Player'}</DialogTitle>
         <DialogContent>
-          <TextField autoFocus margin="dense" name="name" label="Name" fullWidth value={formData.name} onChange={handleInputChange} />
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <TextField autoFocus margin="dense" name="name" label="Name" fullWidth value={formData.name} onChange={handleInputChange} />
+            <Button
+                variant="outlined"
+                startIcon={loadingStats ? <CircularProgress size={20} /> : <AutoFixHighIcon />}
+                onClick={handleFetchStats}
+                disabled={loadingStats}
+            >
+                Auto-Fill
+            </Button>
+          </Box>
           <FormControl fullWidth margin="dense">
             <InputLabel>League</InputLabel>
             <Select name="league" value={formData.league} label="League" onChange={handleInputChange}>
