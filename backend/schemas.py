@@ -7,15 +7,15 @@ class PlayerBase(BaseModel):
     team: str
     position: str
 
-    # Optional stats
-    points: Optional[int] = None
-    rebounds: Optional[int] = None
-    assists: Optional[int] = None
-    goals: Optional[int] = None
-    touchdowns: Optional[int] = None
-    yards: Optional[int] = None
+    # Optional stats - using float to support averages
+    points: Optional[float] = None
+    rebounds: Optional[float] = None
+    assists: Optional[float] = None
+    goals: Optional[float] = None
+    touchdowns: Optional[float] = None
+    yards: Optional[float] = None
     batting_average: Optional[float] = None
-    home_runs: Optional[int] = None
+    home_runs: Optional[float] = None
 
 class PlayerCreate(PlayerBase):
     pass

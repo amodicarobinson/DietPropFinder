@@ -10,16 +10,19 @@ class Player(Base):
     team = Column(String)
     position = Column(String)
 
-    # Stats Columns (Nullable as they depend on the league)
-    points = Column(Integer, nullable=True)
-    rebounds = Column(Integer, nullable=True)
-    assists = Column(Integer, nullable=True)
+    # Stats Columns
+    # Changed to Float to support averages (PPG, RPG, APG, Batting Avg)
+    points = Column(Float, nullable=True)
+    rebounds = Column(Float, nullable=True)
+    assists = Column(Float, nullable=True)
 
-    goals = Column(Integer, nullable=True)
-    # assists is already defined above, shared by NBA/NHL
-
-    touchdowns = Column(Integer, nullable=True)
-    yards = Column(Integer, nullable=True)
+    # NHL/NFL usually track totals, but averages are possible.
+    # Let's use Float for flexibility or Integer for strict totals.
+    # Scraper fetches totals for NFL (TDs) and NHL (Goals).
+    # But to be safe and consistent, Float is safer if user enters "24.5".
+    goals = Column(Float, nullable=True)
+    touchdowns = Column(Float, nullable=True)
+    yards = Column(Float, nullable=True)
 
     batting_average = Column(Float, nullable=True)
-    home_runs = Column(Integer, nullable=True)
+    home_runs = Column(Float, nullable=True)

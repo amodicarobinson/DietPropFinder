@@ -129,10 +129,9 @@ function App() {
   const handleSubmit = () => {
     const payload = { ...formData };
 
-    ['points', 'rebounds', 'assists', 'goals', 'touchdowns', 'yards', 'home_runs'].forEach(field => {
-       payload[field] = payload[field] === '' ? null : parseInt(payload[field]);
+    ['points', 'rebounds', 'assists', 'goals', 'touchdowns', 'yards', 'home_runs', 'batting_average'].forEach(field => {
+       payload[field] = payload[field] === '' ? null : parseFloat(payload[field]);
     });
-    payload['batting_average'] = payload['batting_average'] === '' ? null : parseFloat(payload['batting_average']);
 
     const method = editId ? 'PUT' : 'POST';
     const url = editId ? `http://localhost:8000/players/${editId}` : 'http://localhost:8000/players/';
