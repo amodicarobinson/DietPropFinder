@@ -52,6 +52,15 @@ npm start
 ```
 The app will open at `http://localhost:3000`.
 
+### 3. Docker Setup (Easy Run)
+If you have Docker installed, you can run the entire stack with one command:
+
+```bash
+docker-compose up --build
+```
+-   **Frontend**: `http://localhost:3000`
+-   **Backend**: `http://localhost:8000`
+
 ---
 
 ## Deployment Guide
